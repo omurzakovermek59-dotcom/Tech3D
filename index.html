@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech3D — Сиздин смартфон. Сиздин эрежелер.</title>
+<meta name="description" content="Флагман смартфондор: расмий кепилдик, 0% бөлүп төлөө, Бишкекке тез жеткирүү.">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<header class="nav glass">
+  <a href="#home" class="logo">Tech<span>3D</span></a>
+  <nav class="links" id="links">
+    <a href="#home">Башкы бет</a><a href="#story">Кантип иштейт</a><a href="#phones">Телефондор</a><a href="#contacts">Байланыш</a>
+  </nav>
+  <div class="tools">
+    <a class="ibtn" href="admin.html" aria-label="Админ панели" title="Админ панели">⚙</a>
+    <button class="ibtn" id="cartBtn" aria-label="Себет">🛒<b class="badge" id="cartCount">0</b></button>
+    <button class="ibtn burger" id="burger" aria-label="Меню">☰</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="home">
+    <div class="hero-text">
+      <p class="chip glass"><i class="live"></i> Жаңы флагмандар 2026 келди</p>
+      <h1 id="h1">Сиздин смартфон. Сиздин эрежелер.</h1>
+      <p class="lead">Каалаган моделди тандаңыз, эстутумду өзүңүз түзүңүз, буйрутманы бир чыкылдатуу менен WhatsApp аркылуу жөнөтүңүз.</p>
+      <div class="cta">
+        <a href="#phones" class="btn mag">Каталогду ачуу</a>
+        <a href="#story" class="btn ghost mag">Кантип иштейт</a>
+      </div>
+      <div class="stats">
+        <div><b data-count="1000" data-suf="+">0</b><span>кардар</span></div>
+        <div><b data-count="24" data-suf="с">0</b><span>ичинде жеткирүү</span></div>
+        <div><b data-count="12" data-suf=" ай">0</b><span>0% бөлүп төлөө</span></div>
+      </div>
+    </div>
+    <div class="win glass" aria-hidden="true">
+      <div class="win-bar"><i></i><i></i><i></i><span>Tech3D каталог</span></div>
+      <ul id="winList"></ul>
+      <div class="win-foot"><span id="winStock"></span><span class="live"></span></div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true"><div><span>iPhone</span><span>Samsung</span><span>Xiaomi</span><span>Pixel</span><span>Расмий кепилдик</span><span>Тез жеткирүү</span><span>iPhone</span><span>Samsung</span><span>Xiaomi</span><span>Pixel</span><span>Расмий кепилдик</span><span>Тез жеткирүү</span></div></div>
+
+  <section class="story" id="story">
+    <div class="story-text">
+      <article class="step on" data-s="1"><small>01 · Сиздин стиль</small><h2>Түсүн тандаңыз</h2><p>Ар бир модель бир нече түстө. Сизге жаккан түстү тандап, телефонду өзүңүзгө ылайыкташтырыңыз.</p></article>
+      <article class="step" data-s="2"><small>02 · Сиздин жыйнак</small><h2>Эстутумду өзүңүз түзүңүз</h2><p>128ГБдан 1ТБга чейин. Эстутумду тандаганда баа ошол замат өзгөрөт, жашыруун төлөмдөр жок.</p></article>
+      <article class="step" data-s="3"><small>03 · Сиздин убакыт</small><h2>Бир чыкылдатуу менен буйрутма</h2><p>Себетти толтуруңуз, атыңызды жазыңыз. Даяр буйрутма WhatsApp аркылуу дүкөнгө түз жөнөтүлөт.</p></article>
+    </div>
+    <div class="stage" id="stage" data-step="1">
+      <div class="phone" id="phone">
+        <div class="scr s1"><div class="sw"><i style="--c:#ff7a3d"></i><i style="--c:#22e4ff"></i><i style="--c:#b6ff3c"></i><i style="--c:#ff3fd0"></i></div><p>Түс</p></div>
+        <div class="scr s2"><div class="bars"><i style="--w:30%">128</i><i style="--w:55%">256</i><i style="--w:80%">512</i><i style="--w:100%">1ТБ</i></div><p>Эстутум</p></div>
+        <div class="scr s3"><div class="ok">✓</div><p>Буйрутма жөнөтүлдү</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="phones">
+    <h2 class="reveal">Каталог</h2>
+    <p class="sub reveal">Эстутумду тандаңыз, баа автоматтык түрдө өзгөрөт.</p>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>Бул бөлүмдө азырынча товар жок.</p>
+  </section>
+</main>
+
+<footer class="footer glass" id="contacts">
+  <div><a href="#home" class="logo">Tech<span>3D</span></a><p>Флагман смартфондордун расмий дүкөнү.</p></div>
+  <div><h4>Байланыш</h4><p>Дарек: Бишкек ш., Чүй проспектиси 100</p><p>Телефон: +996 555 00 00 00</p><p>Иш убактысы: 09:00 – 20:00</p></div>
+  <div class="social"><h4>Социалдык тармактар</h4><a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a><a href="https://t.me" target="_blank" rel="noopener">Telegram</a></div>
+  <p class="copy">© 2026 Tech3D. Бардык укуктар корголгон.</p>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer glass" id="drawer" aria-label="Себет">
+  <div class="dhead"><h3>Сиздин себет</h3><button class="ibtn" id="closeCart" aria-label="Жабуу">✕</button></div>
+  <ul class="clist" id="cartList"></ul>
+  <div class="dfoot">
+    <input id="cName" placeholder="Атыңыз-жөнүңүз" autocomplete="name">
+    <input id="cPhone" placeholder="Телефон номериңиз" inputmode="tel" autocomplete="tel">
+    <div class="total"><span>Жалпы сумма:</span><strong id="total">0 сом</strong></div>
+    <button class="btn wa" id="orderBtn">WhatsApp аркылуу буйрутма берүү</button>
+    <button class="btn ghost" id="clearBtn">Себетти тазалоо</button>
+  </div>
+</aside>
+<div class="toast glass" id="toast" role="status"></div>
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

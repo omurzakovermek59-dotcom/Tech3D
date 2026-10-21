@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech3D — Админ панели</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="adm-body">
+<section class="login" id="login">
+  <form class="glass login-box" id="loginForm">
+    <a href="#" class="logo">Tech<span>3D</span></a>
+    <h2>Админ панели</h2>
+    <input type="password" id="pass" placeholder="Сыр сөз" autocomplete="current-password" required>
+    <p class="err" id="err" hidden>Сыр сөз туура эмес</p>
+    <button class="btn">Кирүү</button>
+    <a class="back" href="index.html">← Дүкөнгө кайтуу</a>
+  </form>
+</section>
+
+<div class="adm" id="app" hidden>
+  <aside class="side glass">
+    <a href="#" class="logo">Tech<span>3D</span></a>
+    <nav id="tabs">
+      <button data-t="dash" class="on">📊 Башкы бет</button>
+      <button data-t="prod">📱 Товарлар</button>
+      <button data-t="ord">🧾 Буйрутмалар <b class="badge2" id="newCount"></b></button>
+      <button data-t="set">⚙ Жөндөөлөр</button>
+    </nav>
+    <a class="back" href="index.html">← Дүкөн</a>
+    <button class="back" id="logout">Чыгуу</button>
+  </aside>
+
+  <main class="adm-main">
+    <section id="t-dash">
+      <h2>Башкы бет</h2>
+      <div class="kpis" id="kpis"></div>
+      <div class="two">
+        <div class="glass pnl"><h3>Акыркы 7 күндүн кирешеси</h3><div class="chart" id="chart"></div></div>
+        <div class="glass pnl"><h3>Аз калган товарлар</h3><ul class="low" id="low"></ul></div>
+      </div>
+    </section>
+
+    <section id="t-prod" hidden>
+      <div class="bar"><h2>Товарлар</h2><button class="btn" id="addProd">+ Жаңы товар</button></div>
+      <div class="tbl glass"><table><thead><tr><th>Аты</th><th>Бренд</th><th>Баасы</th><th>Эски баа</th><th>Кампада</th><th></th></tr></thead><tbody id="prodBody"></tbody></table></div>
+    </section>
+
+    <section id="t-ord" hidden>
+      <div class="bar"><h2>Буйрутмалар</h2><button class="btn ghost" id="csv">CSV жүктөө</button></div>
+      <div class="tbl glass"><table><thead><tr><th>№ / Дата</th><th>Кардар</th><th>Заказ</th><th>Сумма</th><th>Абалы</th><th></th></tr></thead><tbody id="ordBody"></tbody></table></div>
+      <p class="empty" id="ordEmpty" hidden>Азырынча буйрутма жок. Дүкөндөн буйрутма түшкөндө ушул жерде көрүнөт.</p>
+    </section>
+
+    <section id="t-set" hidden>
+      <h2>Жөндөөлөр</h2>
+      <form class="glass pnl form" id="setForm">
+        <label>WhatsApp номери (996 менен, плюссуз)<input id="sWa" required pattern="[0-9]{9,15}"></label>
+        <label>Админ сыр сөзү<input id="sPass" required minlength="4"></label>
+        <button class="btn">Сактоо</button>
+        <button type="button" class="btn ghost" id="reset">Демо маалыматты калыбына келтирүү</button>
+      </form>
+      <p class="note">Эскертүү: бул панель браузердин localStorage'ында иштейт жана ушул түзмөктө гана сакталат. Чыныгы дүкөн үчүн сервер жана коопсуз авторизация керек.</p>
+    </section>
+  </main>
+</div>
+
+<dialog class="glass modal" id="dlg">
+  <form id="pForm" method="dialog">
+    <h3 id="dTitle">Жаңы товар</h3>
+    <label>Аты<input id="fName" required></label>
+    <label>Бренд<input id="fBrand" required placeholder="Apple, Samsung..."></label>
+    <label>Сүрөттөмө<input id="fDesc"></label>
+    <div class="row2"><label>Баасы (сом)<input id="fBase" type="number" min="0" required></label><label>Эски баа (сом)<input id="fOld" type="number" min="0"></label></div>
+    <label>Кампада (дана)<input id="fStock" type="number" min="0" required></label>
+    <label>Эстутум жана кошумча баасы<input id="fMem" placeholder="256ГБ:0, 512ГБ:20000"></label>
+    <div class="row2"><label>Түс 1<input id="fC1" type="color" value="#7a3cff"></label><label>Түс 2<input id="fC2" type="color" value="#22e4ff"></label></div>
+    <div class="row2"><button type="button" class="btn ghost" id="dCancel">Жабуу</button><button class="btn" value="ok">Сактоо</button></div>
+  </form>
+</dialog>
+<div class="toast glass" id="toast" role="status"></div>
+<script src="data.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
