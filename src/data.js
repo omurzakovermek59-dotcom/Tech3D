@@ -31,7 +31,7 @@ export const Store = {
   saveProducts: products => write('products', products),
   orders: () => read('orders', []),
   saveOrders: orders => write('orders', orders),
-  settings: () => ({ wa: '996XXXXXXXXX', pass: '2010', ...read('settings', {}) }),
+  settings: () => ({ wa: '996XXXXXXXXX', ...read('settings', {}) }),
   saveSettings: settings => write('settings', settings)
 };
 

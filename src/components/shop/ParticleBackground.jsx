@@ -38,13 +38,13 @@ export default function ParticleBackground() {
           }
           particle.x = (particle.x + particle.vx + width) % width;
           particle.y = (particle.y + particle.vy + height) % height;
-          context.fillStyle = studioMode ? 'rgba(228,213,181,.55)' : 'rgba(182,255,60,.8)';
+          context.fillStyle = studioMode ? 'rgba(152,115,66,.55)' : 'rgba(182,255,60,.8)';
           context.fillRect(particle.x, particle.y, 2, 2);
           for (let other = index + 1; other < particles.length; other++) {
             const neighbor = particles[other];
             const separation = Math.hypot(particle.x - neighbor.x, particle.y - neighbor.y);
             if (separation < 120) {
-              context.strokeStyle = `rgba(${studioMode ? '205,190,162' : '122,60,255'},${(studioMode ? 0.15 : 0.35) * (1 - separation / 120)})`;
+              context.strokeStyle = `rgba(${studioMode ? '120,103,79' : '122,60,255'},${(studioMode ? 0.15 : 0.35) * (1 - separation / 120)})`;
               context.beginPath();
               context.moveTo(particle.x, particle.y);
               context.lineTo(neighbor.x, neighbor.y);

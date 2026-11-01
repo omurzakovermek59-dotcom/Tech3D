@@ -66,7 +66,7 @@ export default function useShopState(showToast) {
   };
 
   return {
-    products, cart, setCart, brand, setBrand, memory, setMemory,
+    products, setProducts, cart, setCart, brand, setBrand, memory, setMemory,
     cartOpen, setCartOpen, cartCount, addToCart
   };
 }

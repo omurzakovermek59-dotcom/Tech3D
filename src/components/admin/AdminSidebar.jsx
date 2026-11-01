@@ -7,6 +7,7 @@ export default function AdminSidebar({ activeTab, newOrderCount, onChangeTab, on
     ['dash', `📊 ${t('admin.dashboard')}`],
     ['prod', `📱 ${t('admin.products')}`],
     ['ord', `🧾 ${t('admin.orders')}`],
+    ['reviews', `⭐ ${t('admin.reviews')}`],
     ['set', `⚙ ${t('admin.settings')}`]
   ];
   return <aside className="side glass">

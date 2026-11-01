@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react';
-import { fmt, Store } from '../../data.js';
+import { useEffect } from 'react';
+import { fmt } from '../../data.js';
 import { memoryText, productText, useLanguage } from '../../i18n/language.jsx';
 
-export default function Cart({ cart, setCart, isOpen, onClose, onToast }) {
+export default function Cart({ cart, products, setCart, isOpen, onClose, onCheckout, onToast }) {
   const { t } = useLanguage();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const products = Store.products();
   const itemName = item => productText({ id: item.pid, name: item.name }, 'name', t);
   const itemMemory = item => memoryText(item.mem, t);
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const count = cart.reduce((sum, item) => sum + item.qty, 0);
   useEffect(() => {
     try { localStorage.setItem('t3d:cart', JSON.stringify(cart)); } catch { /* Cart stays available in memory. */ }
   }, [cart]);
@@ -23,32 +19,6 @@ export default function Cart({ cart, setCart, isOpen, onClose, onToast }) {
     }
     setCart(current => current.map(value => value.key === item.key ? { ...value, qty: value.qty + delta } : value).filter(value => value.qty > 0));
   };
-  const submitOrder = () => {
-    const customer = name.trim();
-    const customerPhone = phone.trim();
-    if (customer.length < 2 || customerPhone.replace(/\D/g, '').length < 9) {
-      onToast(t('cart.validation'));
-      return;
-    }
-    const orders = Store.orders();
-    const id = `№${orders.length + 1001}`;
-    const order = {
-      id,
-      date: new Date().toISOString(),
-      name: customer,
-      phone: customerPhone,
-      items: cart.map(item => ({ pid: item.pid, name: itemName(item), mem: itemMemory(item), price: item.price, qty: item.qty })),
-      total,
-      status: 'new'
-    };
-    Store.saveOrders([order, ...orders]);
-    const lines = cart.map((item, index) => `${index + 1}. ${itemName(item)} (${itemMemory(item)}) × ${item.qty} = ${fmt(item.price * item.qty)}`);
-    const message = `${t('cart.orderMessage', { id })}\n\n${t('cart.customerName')}: ${customer}\n${t('cart.customerPhone')}: ${customerPhone}\n\n${lines.join('\n')}\n\n${t('cart.total')} ${fmt(total)}\n\n${t('cart.deliveryAddress')}`;
-    window.open(`https://wa.me/${Store.settings().wa}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
-    setCart([]);
-    onClose();
-    onToast(t('cart.success', { id }));
-  };
   return <>
     <div className={`overlay${isOpen ? ' show' : ''}`} onClick={onClose} />
     <aside className={`drawer glass${isOpen ? ' open' : ''}`} aria-label={t('cart.title')} aria-hidden={!isOpen}>
@@ -60,10 +30,8 @@ export default function Cart({ cart, setCart, isOpen, onClose, onToast }) {
         </li>) : <li className="none">{t('cart.empty')}</li>}
       </ul>
       <div className="dfoot">
-        <input value={name} onChange={event => setName(event.target.value)} placeholder={t('cart.name')} autoComplete="name" />
-        <input value={phone} onChange={event => setPhone(event.target.value)} placeholder={t('cart.phone')} inputMode="tel" autoComplete="tel" />
         <div className="total"><span>{t('cart.total')}</span><strong>{fmt(total)}</strong></div>
-        <button className="btn wa" onClick={submitOrder} disabled={!cart.length}>{t('cart.order')}</button>
+        <button className="btn wa" onClick={onCheckout} disabled={!cart.length}>{t('cart.order')}</button>
         <button className="btn ghost" onClick={() => setCart([])}>{t('cart.clear')}</button>
       </div>
     </aside>

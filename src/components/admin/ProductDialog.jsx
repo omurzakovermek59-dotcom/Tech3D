@@ -76,28 +76,32 @@ export default function ProductDialog({ value, onClose, onSave }) {
     dialog.current.close();
     onClose();
   };
-  const submit = event => {
+  const submit = async event => {
     event.preventDefault();
-    onSave({
+    const saved = await onSave({
       id: form.id || `p${Date.now().toString(36)}`,
       name: form.name.trim(),
       brand: form.brand.trim(),
+      category: form.category.trim() || form.brand.trim(),
       desc: form.desc.trim(),
       image: form.image || '',
+      modelUrl: form.modelUrl.trim(),
       base: Number(form.base),
       old: Number(form.old) || 0,
       stock: Math.max(0, Number.parseInt(form.stock, 10) || 0),
       mem: strToMem(form.mem),
       c: [form.color1, form.color2]
     });
-    close();
+    if (saved !== false) close();
   };
   return <dialog className="glass modal" ref={dialog} onCancel={onClose}>
     <form onSubmit={submit}>
       <h3>{form.id ? t('admin.editProduct') : t('admin.newProduct')}</h3>
       <label>{t('admin.name')}<input name="name" value={form.name} onChange={update} required /></label>
       <label>{t('admin.brand')}<input name="brand" value={form.brand} onChange={update} required placeholder="Apple, Samsung..." /></label>
+      <label>{t('admin.category')}<input name="category" value={form.category || ''} onChange={update} required /></label>
       <label>{t('admin.description')}<input name="desc" value={form.desc} onChange={update} /></label>
+      <label>{t('admin.modelUrl')}<input name="modelUrl" type="url" value={form.modelUrl || ''} onChange={update} placeholder="https://example.com/model.glb" /></label>
       <label className="image-upload">{t('admin.productImage')}<input type="file" accept="image/*" onChange={chooseImage} /></label>
       {form.image && <div className="image-preview-wrap">
         <img className="image-preview" src={form.image} alt={form.name || t('admin.productImage')} />

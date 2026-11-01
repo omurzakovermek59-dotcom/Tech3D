@@ -1,10 +1,53 @@
-import { fmt } from '../../data.js';
-import { productText, useLanguage } from '../../i18n/language.jsx';
+import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../../i18n/language.jsx';
 import CountUp from './CountUp.jsx';
 
 export default function Hero({ products }) {
-  const { t } = useLanguage();
-  const featured = products.filter(product => product.stock > 0).slice(0, 3);
+  const { language, t } = useLanguage();
+  const ru = language === 'ru';
+  const phone = products.find(product => product.id === 'ip17');
+  const modelUrl = phone?.modelUrl || phone?.model || '';
+  const validModelUrl = /^https?:\/\//i.test(modelUrl) || modelUrl.startsWith('/');
+  const modelRef = useRef(null);
+  const [modelState, setModelState] = useState(validModelUrl ? 'loading' : 'missing');
+  const [autoRotate, setAutoRotate] = useState(true);
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateRotation = () => setAutoRotate(!motionPreference.matches);
+    updateRotation();
+    motionPreference.addEventListener('change', updateRotation);
+    return () => motionPreference.removeEventListener('change', updateRotation);
+  }, []);
+
+  useEffect(() => {
+    if (!validModelUrl) {
+      setModelState(modelUrl ? 'failed' : 'missing');
+      return undefined;
+    }
+
+    let active = true;
+    setModelState('loading');
+    import('@google/model-viewer').catch(error => {
+      console.error('Unable to load the iPhone 3D viewer:', error);
+      if (active) setModelState('failed');
+    });
+    return () => { active = false; };
+  }, [modelUrl, validModelUrl]);
+
+  useEffect(() => {
+    const viewer = modelRef.current;
+    if (!viewer || !modelUrl) return undefined;
+    const loaded = () => setModelState('ready');
+    const failed = () => setModelState('failed');
+    viewer.addEventListener('load', loaded);
+    viewer.addEventListener('error', failed);
+    return () => {
+      viewer.removeEventListener('load', loaded);
+      viewer.removeEventListener('error', failed);
+    };
+  }, [modelUrl]);
+
   return <>
     <section className="hero" id="home">
       <div className="hero-text">
@@ -18,10 +61,26 @@ export default function Hero({ products }) {
           <div><CountUp value={12} suffix={t('hero.installmentSuffix')} /><span>{t('hero.installments')}</span></div>
         </div>
       </div>
-      <div className="win glass" aria-hidden="true">
-        <div className="win-bar"><i /><i /><i /><span>{t('hero.catalogWindow')}</span></div>
-        <ul>{featured.map(product => <li key={product.id}><i style={{ '--c1': product.c[0], '--c2': product.c[1] }} /><b>{productText(product, 'name', t)}</b><em>{fmt(product.base)}</em></li>)}</ul>
-        <div className="win-foot"><span>{t('hero.stock', { count: products.reduce((sum, product) => sum + product.stock, 0) })}</span><span className="live" /></div>
+      <div className="hero-product">
+        <div className="hero-product-glow" />
+        {validModelUrl
+          ? <model-viewer
+              ref={modelRef}
+              className="hero-model"
+              src={modelUrl}
+              alt={ru ? 'iPhone 17 Pro Max, чёрный цвет' : 'iPhone 17 Pro Max, кара түс'}
+              auto-rotate={autoRotate ? '' : undefined}
+              rotation-per-second="18deg"
+              camera-controls
+              touch-action="pan-y"
+              interaction-prompt="none"
+              shadow-intensity="1"
+              loading="eager"
+            />
+          : <p className="hero-model-message" role="status">{ru ? 'Добавьте GLB-модель в панели администратора' : '3D модель файлын админ панелинен кошуңуз'}</p>}
+        {modelState === 'loading' && <p className="hero-model-status" role="status">{ru ? 'Загрузка 3D-модели…' : '3D модель жүктөлүүдө…'}</p>}
+        {modelState === 'failed' && <p className="hero-model-status" role="alert">{ru ? 'Не удалось открыть 3D-модель. Проверьте ссылку на GLB.' : '3D модель ачылган жок. GLB шилтемесин текшериңиз.'}</p>}
+        <p className="hero-product-caption"><b>iPhone 17 Pro Max</b><span>{ru ? 'АВТОВРАЩЕНИЕ · ПЕРЕТАЩИТЕ ДЛЯ ПОВОРОТА' : 'ӨЗҮ АЙЛАНАТ · СҮЙРӨП АЙЛАНТЫҢЫЗ'}</span></p>
       </div>
     </section>
     <div className="marquee" aria-hidden="true"><div>{['iPhone', 'Samsung', 'Xiaomi', 'Pixel', t('brand.warranty'), t('brand.delivery'), 'iPhone', 'Samsung', 'Xiaomi', 'Pixel', t('brand.warranty'), t('brand.delivery')].map((brand, index) => <span key={index}>{brand}</span>)}</div></div>

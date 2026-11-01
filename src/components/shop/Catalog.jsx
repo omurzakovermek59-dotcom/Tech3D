@@ -1,11 +1,18 @@
-import { useEffect } from 'react';
-import { useLanguage } from '../../i18n/language.jsx';
+import { useEffect, useState } from 'react';
+import { productText, useLanguage } from '../../i18n/language.jsx';
 import ProductCard from './ProductCard.jsx';
 
-export default function Catalog({ products, brand, setBrand, memory, setMemory, onAdd }) {
+export default function Catalog({ products, brand, setBrand, memory, setMemory, onAdd, favoriteIds, onFavorite, onView }) {
   const { t } = useLanguage();
-  const brands = [t('catalog.all'), ...new Set(products.map(product => product.brand))];
-  const visible = products.filter(product => brand === 'Баары' || brand === 'Все' || product.brand === brand);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('default');
+  const brands = [t('catalog.all'), ...new Set(products.map(product => product.category || product.brand))];
+  const visible = products
+    .filter(product => brand === 'Баары' || brand === 'Все' || brand === t('catalog.all') || (product.category || product.brand) === brand)
+    .filter(product => productText(product, 'name', t).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
+    .sort((left, right) => sort === 'low'
+      ? left.base - right.base
+      : sort === 'high' ? right.base - left.base : 0);
   useEffect(() => {
     const reveal = new IntersectionObserver(entries => entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -33,6 +40,14 @@ export default function Catalog({ products, brand, setBrand, memory, setMemory, 
   };
   return <section className="section" id="phones">
     <h2 className="reveal">{t('catalog.title')}</h2><p className="sub reveal">{t('catalog.subtitle')}</p>
+    <div className="catalog-tools">
+      <label className="search-field"><span className="visually-hidden">{t('catalog.search')}</span><input value={search} onChange={event => setSearch(event.target.value)} placeholder={t('catalog.search')} type="search" /></label>
+      <label><span className="visually-hidden">{t('catalog.sort')}</span><select value={sort} onChange={event => setSort(event.target.value)}>
+        <option value="default">{t('catalog.sort')}</option>
+        <option value="low">{t('catalog.sortLow')}</option>
+        <option value="high">{t('catalog.sortHigh')}</option>
+      </select></label>
+    </div>
     <div className="chips">{brands.map(item => {
       const allSelected = item === t('catalog.all') && (brand === 'Баары' || brand === 'Все');
       return <button key={item} className={`chip2${allSelected || item === brand ? ' on' : ''}`} onClick={() => setBrand(allSelected ? 'Баары' : item)}>{item}</button>;
@@ -44,8 +59,11 @@ export default function Catalog({ products, brand, setBrand, memory, setMemory, 
         memoryIndex={memory[product.id] || 0}
         onSelectMemory={(selectedProduct, index) => setMemory(current => ({ ...current, [selectedProduct.id]: index }))}
         onAdd={onAdd}
+        onFavorite={onFavorite}
+        isFavorite={favoriteIds.includes(product.id)}
+        onView={() => onView(product.id)}
       />)}
     </div>
-    {visible.length === 0 && <p className="empty">{t('catalog.empty')}</p>}
+    {visible.length === 0 && <p className="empty">{search ? t('catalog.noResults') : t('catalog.empty')}</p>}
   </section>;
 }

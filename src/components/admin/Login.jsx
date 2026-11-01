@@ -1,20 +1,38 @@
 import { useState } from 'react';
-import { Store } from '../../data.js';
+import { getIdTokenResult, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth, isFirebaseConfigured } from '../../firebase.js';
 import { useLanguage } from '../../i18n/language.jsx';
+import { ADMIN_EMAIL } from '../../admin/constants.js';
 import AdminControls from '../shared/AdminControls.jsx';
 
-export default function Login({ onLogin, theme, onToggleTheme }) {
+export default function Login({ onLogin, theme, onToggleTheme, authMessage }) {
   const { t } = useLanguage();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [invalid, setInvalid] = useState(false);
-  const submit = event => {
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submit = async event => {
     event.preventDefault();
-    if (password === Store.settings().pass) {
-      try { sessionStorage.setItem('t3d-adm', '1'); } catch { /* The current tab can still stay authenticated. */ }
+    setError('');
+    if (!isFirebaseConfigured || !auth) {
+      setError(t('admin.firebaseRequired'));
+      return;
+    }
+    setBusy(true);
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const token = await getIdTokenResult(credential.user, true);
+      if (token.claims.email !== ADMIN_EMAIL || token.claims.email_verified !== true) {
+        await signOut(auth);
+        setError(t('admin.accessDenied'));
+        return;
+      }
       onLogin();
-    } else {
-      setInvalid(true);
-      event.currentTarget.elements.password.select();
+    } catch (failure) {
+      console.error('Admin authentication failed:', failure);
+      setError(t('admin.passwordWrong'));
+    } finally {
+      setBusy(false);
     }
   };
   return <section className="login">
@@ -22,9 +40,11 @@ export default function Login({ onLogin, theme, onToggleTheme }) {
       <a href="#" className="logo">Tech<span>3D</span></a>
       <AdminControls theme={theme} onToggleTheme={onToggleTheme} />
       <h2>{t('admin.loginTitle')}</h2>
+      {authMessage && <p className="err" role="alert">{authMessage}</p>}
+      <input name="email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder={ADMIN_EMAIL} autoComplete="username" required />
       <input name="password" type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder={t('admin.password')} autoComplete="current-password" required />
-      {invalid && <p className="err">{t('admin.passwordWrong')}</p>}
-      <button className="btn">{t('admin.login')}</button>
+      {error && <p className="err" role="alert">{error}</p>}
+      <button className="btn" disabled={busy}>{busy ? t('auth.loading') : t('admin.login')}</button>
       <a className="back" href="index.html">← {t('admin.returnShop')}</a>
     </form>
   </section>;

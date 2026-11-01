@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { fmt, memToStr, Store } from '../../data.js';
+import { fmt, memToStr } from '../../data.js';
 import { EMPTY_PRODUCT } from '../../admin/constants.js';
+import { deleteAdminProduct, saveAdminProduct } from '../../services/store.js';
 import ProductDialog from './ProductDialog.jsx';
 import { useLanguage } from '../../i18n/language.jsx';
 
@@ -8,24 +9,32 @@ export default function Products({ products, onSave, onToast }) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState(null);
   const edit = product => setEditing(product
-    ? { ...product, old: product.old || '', mem: memToStr(product.mem), color1: product.c[0], color2: product.c[1], image: product.image || '' }
+    ? { ...product, category: product.category || product.brand, old: product.old || '', mem: memToStr(product.mem), color1: product.c[0], color2: product.c[1], image: product.image || '', modelUrl: product.modelUrl || '' }
     : { ...EMPTY_PRODUCT });
-  const save = product => {
-    const list = Store.products();
-    const index = list.findIndex(item => item.id === product.id);
-    if (index === -1) list.push(product);
-    else list[index] = product;
-    Store.saveProducts(list);
-    onSave(list);
-    setEditing(null);
-    onToast(t('admin.productSaved'));
+  const save = async product => {
+    try {
+      const saved = await saveAdminProduct(product);
+      const list = [...products.filter(item => item.id !== saved.id), saved];
+      onSave(list);
+      setEditing(null);
+      onToast(t('admin.productSaved'));
+      return true;
+    } catch (error) {
+      console.error('Unable to save product:', error);
+      onToast(t('admin.productSaveFailed'));
+      return false;
+    }
   };
-  const remove = product => {
+  const remove = async product => {
     if (!window.confirm(t('admin.deleteProductConfirm'))) return;
-    const list = Store.products().filter(item => item.id !== product.id);
-    Store.saveProducts(list);
-    onSave(list);
-    onToast(t('admin.productDeleted'));
+    try {
+      await deleteAdminProduct(product.id);
+      onSave(products.filter(item => item.id !== product.id));
+      onToast(t('admin.productDeleted'));
+    } catch (error) {
+      console.error('Unable to delete product:', error);
+      onToast(t('admin.productDeleteFailed'));
+    }
   };
   return <section>
     <div className="bar"><h2>{t('admin.products')}</h2><button className="btn" onClick={() => edit(null)}>+ {t('admin.newProduct')}</button></div>
