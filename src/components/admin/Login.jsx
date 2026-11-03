@@ -22,7 +22,7 @@ export default function Login({ onLogin, theme, onToggleTheme, authMessage }) {
     try {
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
       const token = await getIdTokenResult(credential.user, true);
-      if (token.claims.email !== ADMIN_EMAIL || token.claims.email_verified !== true) {
+      if (token.claims.email !== ADMIN_EMAIL) {
         await signOut(auth);
         setError(t('admin.accessDenied'));
         return;
@@ -37,7 +37,7 @@ export default function Login({ onLogin, theme, onToggleTheme, authMessage }) {
   };
   return <section className="login">
     <form className="glass login-box" onSubmit={submit}>
-      <a href="#" className="logo">Tech<span>3D</span></a>
+      <a href="/" className="logo">Мой телефон</a>
       <AdminControls theme={theme} onToggleTheme={onToggleTheme} />
       <h2>{t('admin.loginTitle')}</h2>
       {authMessage && <p className="err" role="alert">{authMessage}</p>}

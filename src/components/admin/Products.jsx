@@ -9,7 +9,19 @@ export default function Products({ products, onSave, onToast }) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState(null);
   const edit = product => setEditing(product
-    ? { ...product, category: product.category || product.brand, old: product.old || '', mem: memToStr(product.mem), color1: product.c[0], color2: product.c[1], image: product.image || '', modelUrl: product.modelUrl || '' }
+    ? {
+      ...product,
+      category: product.category || product.brand,
+      old: product.old || '',
+      mem: memToStr(product.mem),
+      color1: product.c?.[0] || '#7a3cff',
+      color2: product.c?.[1] || '#22e4ff',
+      image: product.image || '',
+      gallery: product.gallery || [],
+      colors: product.colors || [],
+      specs: { ram: '', storage: '', screen: '', camera: '', battery: '', processor: '', ...product.specs },
+      modelUrl: product.modelUrl || ''
+    }
     : { ...EMPTY_PRODUCT });
   const save = async product => {
     try {

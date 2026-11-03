@@ -16,7 +16,7 @@ import ProductDetails from '../components/shop/ProductDetails.jsx';
 import Story from '../components/shop/Story.jsx';
 import { useLanguage } from '../i18n/language.jsx';
 import { auth, isFirebaseConfigured } from '../firebase.js';
-import { subscribeToFavorites, subscribeToProducts, toggleFavorite } from '../services/store.js';
+import { subscribeToFavorites, subscribeToProducts, subscribeToStoreSettings, toggleFavorite } from '../services/store.js';
 import useShopState from './useShopState.js';
 
 function currentRoute() {
@@ -41,6 +41,8 @@ export default function ShopApp() {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [favoriteError, setFavoriteError] = useState('');
+  const [storeSettings, setStoreSettings] = useState({});
+  const [storeSettingsError, setStoreSettingsError] = useState('');
   const navigate = path => {
     window.history.pushState({}, '', path);
     setRoute(currentRoute());
@@ -79,6 +81,18 @@ export default function ShopApp() {
       showToast(language === 'ru' ? 'Не удалось обновить каталог.' : 'Каталогты жаңыртуу мүмкүн болгон жок.');
     });
   }, [language, setShopProducts, showToast]);
+  useEffect(() => {
+    if (!isFirebaseConfigured) return undefined;
+    return subscribeToStoreSettings(settings => {
+      setStoreSettings(settings);
+      setStoreSettingsError('');
+    }, error => {
+      console.error('Unable to load public store location:', error);
+      setStoreSettingsError(language === 'ru'
+        ? 'Не удалось загрузить контактные данные магазина.'
+        : 'Дүкөндүн байланыш маалыматын жүктөө мүмкүн болгон жок.');
+    });
+  }, [language]);
   const handleFavorite = async productId => {
     if (!user || user.isAnonymous) {
       navigate('/login?next=%2Ffavorites');
@@ -107,6 +121,14 @@ export default function ShopApp() {
   const selectedProduct = routePath.startsWith('/product/')
     ? shop.products.find(product => product.id === decodeURIComponent(routePath.slice('/product/'.length)))
     : null;
+  useEffect(() => {
+    const title = selectedProduct
+      ? `${selectedProduct.name} — Мой телефон`
+      : 'Мой телефон — смартфондор дүкөнү';
+    document.title = title;
+    const description = document.querySelector('meta[name="description"]');
+    if (description) description.content = selectedProduct?.desc || 'Мой телефон — заманбап смартфондор, ыңгайлуу тандоо жана сапаттуу тейлөө.';
+  }, [selectedProduct]);
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.lang = language;
@@ -159,7 +181,7 @@ export default function ShopApp() {
                 />
               </>}
     </main>
-    <Footer />
+    <Footer settings={storeSettings} settingsError={storeSettingsError} />
     <Cart cart={shop.cart} products={shop.products} setCart={shop.setCart} isOpen={shop.cartOpen} onClose={() => shop.setCartOpen(false)} onCheckout={checkout} onToast={showToast} />
     <Toast message={toast} />
   </>;

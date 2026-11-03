@@ -17,3 +17,4 @@ export const app = isFirebaseConfigured ? (getApps().length ? getApp() : initial
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
 export const storage = app ? getStorage(app) : null;
+export const twoGisApiKey = import.meta.env.VITE_2GIS_API_KEY || '';

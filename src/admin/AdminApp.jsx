@@ -49,7 +49,7 @@ export default function AdminApp() {
       }
       try {
         const token = await getIdTokenResult(user, true);
-        if (token.claims.email === ADMIN_EMAIL && token.claims.email_verified === true) {
+        if (token.claims.email === ADMIN_EMAIL) {
           setAuthenticated(true);
           setAuthMessage('');
         } else {

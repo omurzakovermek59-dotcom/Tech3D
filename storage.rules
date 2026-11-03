@@ -3,8 +3,7 @@ service firebase.storage {
   match /b/{bucket}/o {
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'omurzakovermek280@gmail.com'
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email == 'admin@256.kg';
     }
 
     match /product-images/{productId}/{fileName} {

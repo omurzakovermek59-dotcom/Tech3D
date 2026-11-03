@@ -5,7 +5,7 @@ export default function Header({ cartCount, onOpenCart, theme, onToggleTheme, us
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   return <header className="nav glass">
-    <a href="/" className="logo">Tech<span>3D</span></a>
+    <a href="/" className="logo">Мой телефон</a>
     <nav className={`links${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(false)}>
       <a href="/">{t('nav.home')}</a><a href="/#story">{t('nav.process')}</a><a href="/#phones">{t('nav.phones')}</a><a href="/#contacts">{t('nav.contact')}</a>
     </nav>

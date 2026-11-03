@@ -7,8 +7,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return signedIn()
-        && request.auth.token.email == 'omurzakovermek280@gmail.com'
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email == 'admin@256.kg';
     }
 
     match /products/{productId} {
@@ -66,7 +65,8 @@ service cloud.firestore {
     }
 
     match /system/{documentId} {
-      allow read, write: if isAdmin();
+      allow read: if documentId == 'storeSettings' || isAdmin();
+      allow write: if isAdmin();
     }
   }
 }

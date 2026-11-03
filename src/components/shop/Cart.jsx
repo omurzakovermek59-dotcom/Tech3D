@@ -5,7 +5,7 @@ import { memoryText, productText, useLanguage } from '../../i18n/language.jsx';
 export default function Cart({ cart, products, setCart, isOpen, onClose, onCheckout, onToast }) {
   const { t } = useLanguage();
   const itemName = item => productText({ id: item.pid, name: item.name }, 'name', t);
-  const itemMemory = item => memoryText(item.mem, t);
+  const itemMemory = item => [memoryText(item.mem, t), item.color].filter(Boolean).join(' · ');
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   useEffect(() => {
     try { localStorage.setItem('t3d:cart', JSON.stringify(cart)); } catch { /* Cart stays available in memory. */ }

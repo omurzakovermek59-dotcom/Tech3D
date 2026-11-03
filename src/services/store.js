@@ -77,6 +77,21 @@ export function subscribeToProducts(onChange, onError) {
   }, onError);
 }
 
+export function subscribeToStoreSettings(onChange, onError) {
+  const database = requireDatabase();
+  return onSnapshot(doc(database, 'system', 'storeSettings'), snapshot => {
+    onChange(snapshot.exists() ? snapshot.data() : {});
+  }, onError);
+}
+
+export async function saveStoreSettings(settings) {
+  const database = requireDatabase();
+  await setDoc(doc(database, 'system', 'storeSettings'), {
+    ...settings,
+    updatedAt: serverTimestamp()
+  });
+}
+
 export function subscribeToOrders(onChange, onError) {
   const database = requireDatabase();
   const ordersQuery = query(collection(database, 'orders'), orderBy('createdAt', 'desc'));
@@ -121,11 +136,18 @@ async function uploadProductImage(data, productId) {
 
 export async function saveAdminProduct(product) {
   const database = requireDatabase();
-  const image = product.image?.startsWith('data:image/')
-    ? await uploadProductImage(product.image, product.id)
-    : product.image || '';
-  await setDoc(doc(database, 'products', product.id), { ...product, image, updatedAt: serverTimestamp() });
-  return { ...product, image };
+  const uploadIfNeeded = image => image?.startsWith('data:image/')
+    ? uploadProductImage(image, product.id)
+    : Promise.resolve(image || '');
+  const image = await uploadIfNeeded(product.image);
+  const gallery = await Promise.all((product.gallery || []).map(uploadIfNeeded));
+  const colors = await Promise.all((product.colors || []).map(async color => ({
+    ...color,
+    image: await uploadIfNeeded(color.image)
+  })));
+  const savedProduct = { ...product, image, gallery, colors };
+  await setDoc(doc(database, 'products', product.id), { ...savedProduct, updatedAt: serverTimestamp() });
+  return savedProduct;
 }
 
 export async function deleteAdminProduct(productId) {

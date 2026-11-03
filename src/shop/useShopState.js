@@ -47,10 +47,10 @@ export default function useShopState(showToast) {
     };
   }, []);
 
-  const addToCart = (product, index) => {
-    const memoryOption = product.mem[index] || product.mem[0];
+  const addToCart = (product, index, color = '') => {
+    const memoryOption = product.mem?.[index] || product.mem?.[0] || ['', 0];
     const productName = productText(product, 'name', t);
-    const key = `${product.id}|${index}`;
+    const key = `${product.id}|${index}|${color}`;
     const inCart = cart.filter(item => item.pid === product.id).reduce((sum, item) => sum + item.qty, 0);
     if (inCart >= product.stock) {
       showToast(t('cart.stockLimit', { count: product.stock }));
@@ -60,7 +60,7 @@ export default function useShopState(showToast) {
       const existing = current.find(item => item.key === key);
       return existing
         ? current.map(item => item.key === key ? { ...item, qty: item.qty + 1 } : item)
-        : [...current, { key, pid: product.id, name: productName, mem: memoryOption[0], price: product.base + memoryOption[1], qty: 1 }];
+        : [...current, { key, pid: product.id, name: productName, mem: memoryOption[0], color, price: product.base + memoryOption[1], qty: 1 }];
     });
     showToast(t('toast.added', { name: productName }));
   };

@@ -43,7 +43,8 @@ export default function Checkout({ cart, user, onSuccess, onNavigate }) {
         items: cart.map(item => ({
           productId: item.pid,
           name: item.name,
-          variant: item.mem,
+          variant: [item.mem, item.color].filter(Boolean).join(' · '),
+          color: item.color || '',
           unitPrice: item.price,
           quantity: item.qty
         })),
@@ -75,7 +76,7 @@ export default function Checkout({ cart, user, onSuccess, onNavigate }) {
       </form>
       <div className="glass order-summary">
         <h2>{ru ? 'Ваш заказ' : 'Заказыңыз'}</h2>
-        {cart.map(item => <div className="order-line" key={item.key}><span>{item.name} ({memoryText(item.mem, t)}) × {item.qty}</span><b>{fmt(item.price * item.qty)}</b></div>)}
+        {cart.map(item => <div className="order-line" key={item.key}><span>{item.name} ({[memoryText(item.mem, t), item.color].filter(Boolean).join(' · ')}) × {item.qty}</span><b>{fmt(item.price * item.qty)}</b></div>)}
         <div className="total"><span>{ru ? 'Итого' : 'Жалпы сумма'}</span><strong>{fmt(total)}</strong></div>
       </div>
     </div>}

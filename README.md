@@ -1,6 +1,6 @@
-# Tech3D
+# Мой телефон
 
-React жана Vite менен жасалган Tech3D смартфон дүкөнү. Учурдагы UI компоненттери
+React жана Vite менен жасалган «Мой телефон» смартфон дүкөнү. Учурдагы UI компоненттери
 сакталды; Firebase Authentication, Cloud Firestore жана Firebase Storage аркылуу
 каталог, аккаунттар, заказдар, тандалгандар жана пикирлер иштейт.
 
@@ -21,9 +21,22 @@ Firebase Console'дон кайра алыңыз. Азыркы Firebase долб�
 базасы түзүлө элек (браузерден текшерилди); заказ/favorites/reviews/admin иштеши
 үчүн базаны түзүп, төмөнкү эрежелерди жарыялоо керек.
 
-Көз карандылыктар буга чейин `package.json` ичинде бар. Жаңы checkout үчүн
-`npm install firebase @google/model-viewer` командасы Firebase жана GLB/GLTF
-көргүчүн орнотот.
+Көз карандылыктар `package.json` ичинде бар. Кадимки орнотуу үчүн `npm install`
+жана текшерүү үчүн `npm run build` колдонуңуз.
+
+## 2GIS картасын конфигурациялоо
+
+Интерактивдүү карта расмий 2GIS MapGL API'ин колдонот. [2GIS developer порталынан](https://dev.2gis.com/)
+MapGL API ачкычын алып, `.env.local` файлына `VITE_2GIS_API_KEY=...` катары
+киргизиңиз. Бул браузерде иштеген public ачкыч болгондуктан, аны сыр катары
+кароого болбойт: мүмкүн болсо 2GIS консолунда домендерге чектөө коюңуз. Картанын
+ачкычы жок же карта жүктөлбөй калса да, байланыш маалыматтары жана картага
+шилтемелер көрсөтүлөт.
+
+Администратор `/admin` → **Жөндөөлөр** → **Дүкөндүн жайгашкан жери** бөлүмүнөн
+дүкөндүн атын, дарегин, координаттарын, 2GIS шилтемесин жана телефонун киргизет.
+Дарек/координаттар башында бош; демек ойдон чыгарылган жайгашкан жер көрсөтүлбөйт.
+Бул маалымат Firestore'дун `system/storeSettings` документинде сакталат.
 
 ## Firebase даярдоо
 
@@ -42,14 +55,15 @@ Firebase Console'дон кайра алыңыз. Азыркы Firebase долб�
    товарлары гана көрүнөт.
 6. `/admin` жолу өзүнчө `admin.html` панелине алып барат. Админ панелине жана
    админ Firestore/Storage аракеттерине тастыкталган
-   `omurzakovermek280@gmail.com` аккаунту гана кире алат. Firebase Authentication'да
-   бул email үчүн аккаунт түзүп, email дарегин ырастап, эрежелерди жарыялаңыз.
+   `admin@256.kg` аккаунту гана кире алат. Firebase Authentication'да
+   бул email үчүн аккаунт түзүп, Firestore жана Storage эрежелерин жарыялаңыз.
    Алгачкы админ киргенде каталог бош болсо, учурдагы демо товарлар Firestore'го
    бир жолу көчүрүлөт.
 
 `firestore.rules` кардардын өз заказдарын гана окуусун, өзүнүн favorites жана
 review документтерин гана өзгөртүүсүн, ал эми товар/заказ/модерация операцияларын
-тастыкталган `omurzakovermek280@gmail.com` аккаунтуна чектейт. Заказ Telegram'га
+`admin@256.kg` аккаунтуна чектейт. Админ email'ин ырастоо талап кылынбайт.
+Заказ Telegram'га
 жөнөтүлбөйт — Firestore'го сакталат. Telegram кошулса, Bot Token'ди Vercel
 Serverless Function же Cloud Function environment variables'ында сактап,
 браузерден түз жөнөтпөңүз.
@@ -62,20 +76,28 @@ Serverless Function же Cloud Function environment variables'ында сакт�
 - `src/components/shop/Favorites.jsx` жана `ProductCard.jsx` — аккаунттагы избранное.
 - `src/components/shop/Checkout.jsx` жана `src/services/store.js` — форма, уникалдуу
   idempotent заказ id, Firestore транзакциясы; сакталгандан кийин гана корзина тазаланат.
-- `src/components/shop/ProductDetails.jsx` — интерактивдүү GLB/GLTF көргүч, сүрөт fallback,
+- `src/components/shop/ProductDetails.jsx` жана `ProductGallery.jsx` — товар ID
+  боюнча толук барак, сүрөт галереясы, түс/эс тандоо, мүнөздөмөлөр, GLB/GLTF көргүч,
   бир аккаунтка бир пикир жана орточо рейтинг.
+- `src/components/shop/StoreLocation.jsx` — Firestore'дон алынган байланыш маалыматы,
+  расмий 2GIS MapGL картасы жана карта/маршрут шилтемелери.
+- `src/components/admin/ProductDialog.jsx` — товар сүрөттөрүн, галереяны,
+  техникалык мүнөздөмөлөрдү, түстөрдү жана түс сүрөттөрүн башкаруу.
+- `src/components/admin/Settings.jsx` — дүкөндүн дарегин жана байланыш маалыматын
+  Firestore'го сактоо.
 - `src/admin/AdminApp.jsx`, `src/components/admin/` — админ email текшерүүсү,
   Firestore каталог/заказ башкаруусу жана пикирлерди модерациялоо.
 - `firestore.rules`, `storage.rules` — сервер тараптагы уруксаттар.
 - `style.css` — учурдагы анимациялар/карточкалар сакталган, эки тема режиминин
-  тең негизги фон түсү ак.
+  учурдагы эки теманы жана responsive стилдерди сактайт.
 
 ## Vercel'ге жайгаштыруу
 
 1. Репозиторийди Vercel'ге туташтырыңыз. Build command: `npm run build`,
    output directory: `dist`.
 2. Project Settings → Environment Variables бөлүмүнө `.env.example`'дагы бардык
-   `VITE_FIREBASE_*` өзгөрмөлөрдү киргизиңиз.
+   `VITE_FIREBASE_*` өзгөрмөлөрдү жана интерактивдүү 2GIS карта үчүн
+   `VITE_2GIS_API_KEY` маанисин киргизиңиз.
 3. Firebase Authentication'га production доменди Authorized domains катары кошуңуз.
 4. `vercel.json` `/admin` жолун `/admin.html` барагына багыттайт.
 5. Өзгөрмөлөрдү орноткондон кийин кайра deploy кылыңыз. Firebase Rules'ту
@@ -94,4 +116,7 @@ Serverless Function же Cloud Function environment variables'ында сакт�
 - [ ] Пикирдин рейтинги жана орточо баасы көрүнөт; ошол эле аккаунт экинчи документ түзбөй, барын өзгөртөт.
 - [ ] Башка аккаунт `/admin`'ге кире албайт; тастыкталган admin email Firestore жана Storage операцияларын аткара алат.
 - [ ] Админ товар, сүрөт, заказ статусу жана пикир модерациясын текшерет.
+- [ ] Товарда ID туура ачылып, сүрөт галереясы, түс, корзина жана заказдагы түс текшерилет.
+- [ ] Админ товарга кошумча сүрөт, мүнөздөмө, жеткиликтүү түстөрдү кошуп/алып салат.
+- [ ] Жайгашкан жер Firebase'де сакталат; бош координатта ойдон чыгарылган карта ачылбайт.
 - [ ] Тар экранда header, карточкалар, checkout жана admin таблицалар колдонууга ыңгайлуу.

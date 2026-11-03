@@ -71,6 +71,35 @@ export default function ProductDialog({ value, onClose, onSave }) {
     }
     event.target.value = '';
   };
+  const chooseGallery = async event => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    setImageError(false);
+    try {
+      const images = await Promise.all(files.map(compressImage));
+      setForm(current => ({ ...current, gallery: [...(current.gallery || []), ...images] }));
+    } catch (error) {
+      console.error('Unable to process product gallery:', error);
+      setImageError(true);
+    }
+    event.target.value = '';
+  };
+  const updateColor = (index, key, value) => setForm(current => ({
+    ...current,
+    colors: current.colors.map((color, colorIndex) => colorIndex === index ? { ...color, [key]: value } : color)
+  }));
+  const chooseColorImage = async (index, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageError(false);
+    try {
+      updateColor(index, 'image', await compressImage(file));
+    } catch (error) {
+      console.error('Unable to process product color image:', error);
+      setImageError(true);
+    }
+    event.target.value = '';
+  };
   const removeImage = () => setForm(current => ({ ...current, image: '' }));
   const close = () => {
     dialog.current.close();
@@ -85,6 +114,13 @@ export default function ProductDialog({ value, onClose, onSave }) {
       category: form.category.trim() || form.brand.trim(),
       desc: form.desc.trim(),
       image: form.image || '',
+      gallery: form.gallery || [],
+      colors: (form.colors || []).filter(color => color.name?.trim()).map(color => ({
+        name: color.name.trim(),
+        value: color.value || '#777777',
+        image: color.image || ''
+      })),
+      specs: Object.fromEntries(Object.entries(form.specs || {}).map(([key, value]) => [key, value.trim()])),
       modelUrl: form.modelUrl.trim(),
       base: Number(form.base),
       old: Number(form.old) || 0,
@@ -107,6 +143,11 @@ export default function ProductDialog({ value, onClose, onSave }) {
         <img className="image-preview" src={form.image} alt={form.name || t('admin.productImage')} />
         <button type="button" className="mbtn del" onClick={removeImage}>{t('admin.removeImage')}</button>
       </div>}
+      <label className="image-upload">{t('location.galleryAdmin')}<input type="file" accept="image/*" multiple onChange={chooseGallery} /></label>
+      {form.gallery?.length > 0 && <div className="admin-gallery-previews">{form.gallery.map((image, index) => <div className="admin-gallery-preview" key={`${image.slice(0, 40)}-${index}`}>
+        <img src={image} alt={`${t('location.galleryAdmin')} ${index + 1}`} />
+        <button type="button" className="mbtn del" onClick={() => setForm(current => ({ ...current, gallery: current.gallery.filter((_, itemIndex) => itemIndex !== index) }))}>{t('location.remove')}</button>
+      </div>)}</div>}
       {imageError && <p className="err" role="alert">{t('admin.imageTooLarge')}</p>}
       <div className="row2">
         <label>{t('admin.priceSom')}<input name="base" type="number" min="0" value={form.base} onChange={update} required /></label>
@@ -114,6 +155,26 @@ export default function ProductDialog({ value, onClose, onSave }) {
       </div>
       <label>{t('admin.stockCount')}<input name="stock" type="number" min="0" value={form.stock} onChange={update} required /></label>
       <label>{t('admin.memoryPrices')}<input name="mem" value={form.mem} onChange={update} placeholder="256ГБ:0, 512ГБ:20000" /></label>
+      <h4>{t('location.specifications')}</h4>
+      {[
+        ['ram', 'location.ram'],
+        ['storage', 'location.storage'],
+        ['screen', 'location.screen'],
+        ['camera', 'location.camera'],
+        ['battery', 'location.battery'],
+        ['processor', 'location.processor']
+      ].map(([key, label]) => <label key={key}>{t(label)}<input value={form.specs?.[key] || ''} onChange={event => setForm(current => ({ ...current, specs: { ...current.specs, [key]: event.target.value } }))} /></label>)}
+      <div className="bar"><h4>{t('location.colors')}</h4><button type="button" className="mbtn" onClick={() => setForm(current => ({ ...current, colors: [...(current.colors || []), { name: '', value: '#777777', image: '' }] }))}>+ {t('location.addColor')}</button></div>
+      {form.colors?.map((color, index) => <fieldset className="admin-color-fields" key={`color-${index}`}>
+        <label>{t('location.colorName')}<input value={color.name} onChange={event => updateColor(index, 'name', event.target.value)} required /></label>
+        <label>{t('location.color')}<input type="color" value={color.value || '#777777'} onChange={event => updateColor(index, 'value', event.target.value)} /></label>
+        <label className="image-upload">{t('location.colorImage')}<input type="file" accept="image/*" onChange={event => chooseColorImage(index, event)} /></label>
+        {color.image && <div className="image-preview-wrap">
+          <img className="image-preview" src={color.image} alt={color.name || t('location.color')} />
+          <button type="button" className="mbtn del" onClick={() => updateColor(index, 'image', '')}>{t('location.remove')}</button>
+        </div>}
+        <button type="button" className="mbtn del" onClick={() => setForm(current => ({ ...current, colors: current.colors.filter((_, itemIndex) => itemIndex !== index) }))}>{t('location.remove')}</button>
+      </fieldset>)}
       <div className="row2">
         <label>{t('admin.color1')}<input name="color1" type="color" value={form.color1} onChange={update} /></label>
         <label>{t('admin.color2')}<input name="color2" type="color" value={form.color2} onChange={update} /></label>

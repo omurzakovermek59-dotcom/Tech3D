@@ -11,7 +11,7 @@ export default function AdminSidebar({ activeTab, newOrderCount, onChangeTab, on
     ['set', `⚙ ${t('admin.settings')}`]
   ];
   return <aside className="side glass">
-    <a href="#" className="logo">Tech<span>3D</span></a>
+    <a href="/" className="logo">Мой телефон</a>
     <AdminControls theme={theme} onToggleTheme={onToggleTheme} />
     <nav>
       {tabs.map(([id, label]) => <button key={id} className={activeTab === id ? 'on' : ''} onClick={() => onChangeTab(id)}>
