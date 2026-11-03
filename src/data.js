@@ -35,7 +35,10 @@ export const Store = {
   saveSettings: settings => write('settings', settings)
 };
 
-export const memToStr = memory => memory.map(([name, price]) => `${name}:${price}`).join(', ');
+export const memToStr = memory => (Array.isArray(memory) ? memory : [])
+  .filter(option => Array.isArray(option) && option[0] != null)
+  .map(([name, price]) => `${name}:${price ?? 0}`)
+  .join(', ');
 
 export function strToMem(value) {
   const memories = value.split(',').map(item => item.trim()).filter(Boolean).map(item => {

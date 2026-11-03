@@ -12,6 +12,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadString } from 'firebase/storage';
+import { SEED } from '../data.js';
 import { db, storage } from '../firebase.js';
 
 function requireDatabase() {
@@ -70,10 +71,43 @@ export async function deleteReview(uid, productId) {
   await deleteDoc(doc(database, 'products', productId, 'reviews', uid));
 }
 
+function normalizeProduct(document) {
+  const data = document.data();
+  const seed = SEED.find(product => product.id === document.id);
+  const numberOrFallback = (value, fallback) => {
+    if (value === undefined || value === null || value === '') return fallback;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
+  };
+  const memories = Array.isArray(data.mem) && data.mem.length
+    ? data.mem
+    : Array.isArray(data.memoryVariants) && data.memoryVariants.length
+      ? data.memoryVariants
+      : seed?.mem || [['Стандарт', 0]];
+
+  return {
+    ...seed,
+    ...data,
+    id: document.id,
+    name: data.name || seed?.name || '',
+    brand: data.brand || seed?.brand || '',
+    category: data.category || seed?.category || data.brand || seed?.brand || '',
+    desc: data.desc || seed?.desc || '',
+    base: numberOrFallback(data.base, seed?.base ?? 0),
+    old: numberOrFallback(data.old, seed?.old ?? 0),
+    stock: numberOrFallback(data.stock, seed?.stock ?? 0),
+    mem: memories,
+    c: Array.isArray(data.c) && data.c.length ? data.c : seed?.c || ['#7a3cff', '#22e4ff'],
+    image: data.image || seed?.image || '',
+    gallery: Array.isArray(data.gallery) ? data.gallery : [],
+    colors: Array.isArray(data.colors) ? data.colors : []
+  };
+}
+
 export function subscribeToProducts(onChange, onError) {
   const database = requireDatabase();
   return onSnapshot(collection(database, 'products'), snapshot => {
-    onChange(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
+    onChange(snapshot.docs.map(normalizeProduct));
   }, onError);
 }
 
