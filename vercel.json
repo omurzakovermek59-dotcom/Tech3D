@@ -1,19 +1,8 @@
 {
   "rewrites": [
-<<<<<<< HEAD
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/admin/:path*", "destination": "/admin.html" },
-=======
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/contacts", "destination": "/index.html" },
-    { "source": "/orders", "destination": "/index.html" },
->>>>>>> c36c803df6409b1debee564b02351e5c1c2ae196
-    { "source": "/login", "destination": "/index.html" },
-    { "source": "/register", "destination": "/index.html" },
-    { "source": "/favorites", "destination": "/index.html" },
-    { "source": "/checkout", "destination": "/index.html" },
-    { "source": "/order-success", "destination": "/index.html" },
-    { "source": "/product/:path*", "destination": "/index.html" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
 }
