@@ -1,5 +1,5 @@
 export const SEED = [
-  { id: 'ip17', brand: 'Apple', name: 'iPhone 17 Pro Max', desc: '6.9" экран, A19 Pro чипи, титан корпус', base: 129900, old: 149900, stock: 8, mem: [['256ГБ', 0], ['512ГБ', 20000], ['1ТБ', 40000]], c: ['#ff7a3d', '#7a3cff'] },
+  { id: 'ip17', brand: 'Apple', name: 'iPhone 17 Pro Max', desc: '6.9" экран, A19 Pro чипи, титан корпус', base: 129900, old: 149900, stock: 8, mem: [['256ГБ', 0], ['512ГБ', 20000], ['1ТБ', 40000]], c: ['#ff7a3d', '#7a3cff'], image: '/images/iphone17-orange-transparent.png' },
   { id: 's26', brand: 'Samsung', name: 'Samsung S26 Ultra', desc: '6.9" Dynamic AMOLED, 200МП AI-камера', base: 119900, old: 139900, stock: 5, mem: [['256ГБ', 0], ['512ГБ', 15000], ['1ТБ', 35000]], c: ['#22e4ff', '#7a3cff'] },
   { id: 'xm14', brand: 'Xiaomi', name: 'Xiaomi 14 Ultra', desc: 'Leica камерасы, 90Вт тез кубаттоо', base: 84900, old: 99900, stock: 3, mem: [['256ГБ', 0], ['512ГБ', 10000]], c: ['#ff3fd0', '#1e8bff'] },
   { id: 'px11', brand: 'Google', name: 'Pixel 11 Pro', desc: 'Таза Android, эң мыкты AI-сүрөттөр', base: 99900, old: 109900, stock: 6, mem: [['256ГБ', 0], ['512ГБ', 12000]], c: ['#b6ff3c', '#1e8bff'] },

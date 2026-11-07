@@ -18,7 +18,8 @@ export default function ProductCard({ product, memoryIndex, onSelectMemory, onAd
   const colors = Array.isArray(item.c) ? item.c : [];
   const productColors = Array.isArray(item.colors) ? item.colors : [];
   const gallery = Array.isArray(item.gallery) ? item.gallery : [];
-  const image = item.image || gallery.find(value => typeof value === 'string' && value) || '';
+  const firstColor = productColors.find(color => color.name);
+  const image = firstColor?.mainImage || firstColor?.image || item.image || gallery.find(value => typeof value === 'string' && value) || '';
   const selectedIndex = Number.isInteger(memoryIndex) ? memoryIndex : 0;
   const index = Math.min(Math.max(0, selectedIndex), memories.length - 1);
   const memoryPrice = memories[index][1];
