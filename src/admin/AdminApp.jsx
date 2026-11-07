@@ -12,8 +12,8 @@ import Reviews from '../components/admin/Reviews.jsx';
 import Settings from '../components/admin/Settings.jsx';
 import AdminSidebar from '../components/admin/AdminSidebar.jsx';
 import { useLanguage } from '../i18n/language.jsx';
-import { initializeProductsIfEmpty, subscribeToOrders, subscribeToProducts } from '../services/store.js';
-import { ADMIN_EMAIL } from './constants.js';
+import { initializeProductsIfEmpty, subscribeToOrders, subscribeToProducts, subscribeToStoreSettings } from '../services/store.js';
+import { isAdminEmail } from './constants.js';
 
 function readTheme() {
   try {
@@ -32,8 +32,17 @@ export default function AdminApp() {
   const [tab, setTab] = useState('dash');
   const [products, setProducts] = useState(() => Store.products());
   const [orders, setOrders] = useState([]);
+  const [storeName, setStoreName] = useState('Мой телефон');
   const [dataError, setDataError] = useState('');
   const [toast, showToast] = useToast(2200);
+  useEffect(() => {
+    if (!isFirebaseConfigured) return undefined;
+    return subscribeToStoreSettings(settings => {
+      setStoreName(String(settings.siteName || '').trim() || 'Мой телефон');
+    }, error => {
+      console.error('Unable to load site name:', error);
+    });
+  }, []);
   useEffect(() => {
     if (!auth) {
       setAuthLoading(false);
@@ -49,7 +58,7 @@ export default function AdminApp() {
       }
       try {
         const token = await getIdTokenResult(user, true);
-        if (token.claims.email === ADMIN_EMAIL) {
+        if (isAdminEmail(token.claims.email)) {
           setAuthenticated(true);
           setAuthMessage('');
         } else {
@@ -69,13 +78,13 @@ export default function AdminApp() {
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.lang = language;
-    document.title = t('admin.documentTitle');
+    document.title = `${storeName} — ${t('admin.loginTitle')}`;
     try {
       localStorage.setItem('t3d:theme', theme);
     } catch {
       // Keep the selected appearance for this page when storage is unavailable.
     }
-  }, [theme, language, t]);
+  }, [theme, language, t, storeName]);
   useEffect(() => {
     document.body.classList.add('adm-body');
     return () => {
@@ -117,10 +126,10 @@ export default function AdminApp() {
   };
   const onToggleTheme = () => setTheme(current => current === 'original' ? 'studio' : 'original');
   if (authLoading) return <section className="login"><div className="glass login-box">{t('auth.loading')}</div></section>;
-  if (!authenticated) return <><Login theme={theme} onToggleTheme={onToggleTheme} onLogin={() => setAuthenticated(true)} authMessage={authMessage || (!isFirebaseConfigured ? t('admin.firebaseRequired') : '')} /><Toast message={toast} /></>;
+  if (!authenticated) return <><Login theme={theme} onToggleTheme={onToggleTheme} onLogin={() => setAuthenticated(true)} authMessage={authMessage || (!isFirebaseConfigured ? t('admin.firebaseRequired') : '')} storeName={storeName} /><Toast message={toast} /></>;
   return <>
     <div className="adm">
-      <AdminSidebar activeTab={tab} newOrderCount={orders.filter(order => order.status === 'new').length} onChangeTab={setTab} onLogout={logout} theme={theme} onToggleTheme={onToggleTheme} />
+      <AdminSidebar activeTab={tab} newOrderCount={orders.filter(order => order.status === 'new').length} onChangeTab={setTab} onLogout={logout} theme={theme} onToggleTheme={onToggleTheme} storeName={storeName} />
       <main className="adm-main">
         {dataError && <p className="err" role="alert">{dataError}</p>}
         {tab === 'dash' && <Dashboard products={products} orders={orders} />}

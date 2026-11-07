@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { signInAnonymously } from 'firebase/auth';
 import { fmt } from '../../data.js';
 import { auth } from '../../firebase.js';
 import { createOrder } from '../../services/store.js';
@@ -15,6 +14,7 @@ export default function Checkout({ cart, user, onSuccess, onNavigate }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const orderId = useRef(`T3D-${crypto.randomUUID()}`);
+  const orderSaved = useRef(false);
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const submit = async event => {
@@ -31,9 +31,12 @@ export default function Checkout({ cart, user, onSuccess, onNavigate }) {
       setError(ru ? 'Firebase не настроен, заказ не сохранён.' : 'Firebase туташкан эмес, заказ сакталган жок.');
       return;
     }
+    if (!user || user.isAnonymous) {
+      onNavigate('/login?next=%2Fcheckout');
+      return;
+    }
     setBusy(true);
     try {
-      const orderUser = user || (await signInAnonymously(auth)).user;
       const details = {
         customerName: name.trim(),
         phone: phone.trim(),
@@ -44,19 +47,23 @@ export default function Checkout({ cart, user, onSuccess, onNavigate }) {
           productId: item.pid,
           name: item.name,
           variant: [item.mem, item.color].filter(Boolean).join(' · '),
+          memory: item.mem || '',
           color: item.color || '',
           unitPrice: item.price,
           quantity: item.qty
         })),
         total
       };
-      await createOrder(orderUser.uid, orderId.current, details);
+      if (!orderSaved.current) {
+        await createOrder(user.uid, orderId.current, details);
+        orderSaved.current = true;
+      }
       onSuccess(orderId.current);
     } catch (failure) {
       console.error('Unable to create order:', failure);
       setError(ru
-        ? 'Заказ не сохранён. Проверьте Anonymous-вход Firebase, базу Firestore и опубликованные правила; корзина не очищена.'
-        : 'Заказ сакталган жок. Firebase Anonymous кирүүсүн, Firestore базасын жана жарыяланган эрежелерди текшериңиз; себет тазаланган жок.');
+        ? 'Заказ не сохранён. Проверьте авторизацию Firebase, базу Firestore и опубликованные правила; корзина не очищена.'
+        : 'Заказ сакталган жок. Firebase кирүүсүн, Firestore базасын жана жарыяланган эрежелерди текшериңиз; себет тазаланган жок.');
     } finally {
       setBusy(false);
     }

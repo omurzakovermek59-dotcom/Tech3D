@@ -19,7 +19,17 @@ export default function Products({ products, onSave, onToast }) {
       color2: product.c?.[1] || '#22e4ff',
       image: product.image || '',
       gallery: Array.isArray(product.gallery) ? product.gallery : [],
-      colors: Array.isArray(product.colors) ? product.colors : [],
+      colors: Array.isArray(product.colors) ? product.colors.map(color => {
+        const images = Array.isArray(color.images)
+          ? color.images
+          : color.image ? [color.image] : [];
+        return {
+          name: color.name || '',
+          hex: color.hex || color.value || '#777777',
+          images,
+          mainImage: color.mainImage || color.image || images[0] || ''
+        };
+      }) : [],
       specs: { ram: '', storage: '', screen: '', camera: '', battery: '', processor: '', ...product.specs },
       modelUrl: product.modelUrl || ''
     }
@@ -34,8 +44,10 @@ export default function Products({ products, onSave, onToast }) {
       return true;
     } catch (error) {
       console.error('Unable to save product:', error);
-      onToast(t('admin.productSaveFailed'));
-      return false;
+      const code = error?.code ? ` (${error.code})` : '';
+      const message = `${error?.message || t('admin.productSaveFailed')}${code}`;
+      onToast(`${t('admin.productSaveFailed')} ${message}`.trim());
+      return message;
     }
   };
   const remove = async product => {

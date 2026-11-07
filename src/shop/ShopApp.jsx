@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import useToast from '../hooks/useToast.js';
 import Toast from '../components/shared/Toast.jsx';
@@ -6,11 +7,14 @@ import AuthPage from '../components/shop/AuthPage.jsx';
 import Cart from '../components/shop/Cart.jsx';
 import Catalog from '../components/shop/Catalog.jsx';
 import Checkout from '../components/shop/Checkout.jsx';
-import Footer from '../components/shop/Footer.jsx';
+import ContactButtons from '../components/shop/ContactButtons.jsx';
+import ContactPage from '../components/shop/ContactPage.jsx';
 import Favorites from '../components/shop/Favorites.jsx';
+import Footer from '../components/shop/Footer.jsx';
 import Header from '../components/shop/Header.jsx';
 import Hero from '../components/shop/Hero.jsx';
 import OrderSuccess from '../components/shop/OrderSuccess.jsx';
+import OrderHistory from '../components/shop/OrderHistory.jsx';
 import ParticleBackground from '../components/shop/ParticleBackground.jsx';
 import ProductDetails from '../components/shop/ProductDetails.jsx';
 import Story from '../components/shop/Story.jsx';
@@ -18,10 +22,6 @@ import { useLanguage } from '../i18n/language.jsx';
 import { auth, isFirebaseConfigured } from '../firebase.js';
 import { subscribeToFavorites, subscribeToProducts, subscribeToStoreSettings, toggleFavorite } from '../services/store.js';
 import useShopState from './useShopState.js';
-
-function currentRoute() {
-  return `${window.location.pathname}${window.location.search}`;
-}
 
 function readTheme() {
   try {
@@ -34,9 +34,10 @@ function readTheme() {
 export default function ShopApp() {
   const [toast, showToast] = useToast();
   const shop = useShopState(showToast);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [theme, setTheme] = useState(readTheme);
-  const [route, setRoute] = useState(currentRoute);
+  const location = useLocation();
+  const routerNavigate = useNavigate();
   const [user, setUser] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -44,16 +45,10 @@ export default function ShopApp() {
   const [storeSettings, setStoreSettings] = useState({});
   const [storeSettingsError, setStoreSettingsError] = useState('');
   const navigate = path => {
-    window.history.pushState({}, '', path);
-    setRoute(currentRoute());
+    routerNavigate(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const setShopProducts = shop.setProducts;
-  useEffect(() => {
-    const handlePopState = () => setRoute(currentRoute());
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
   useEffect(() => {
     if (!auth) return undefined;
     return onAuthStateChanged(auth, nextUser => {
@@ -113,22 +108,25 @@ export default function ShopApp() {
     shop.setCart([]);
     navigate(`/order-success?id=${encodeURIComponent(orderId)}`);
   };
-  const routeUrl = new URL(route, window.location.origin);
+  const routeUrl = new URL(`${location.pathname}${location.search}`, window.location.origin);
   const routePath = routeUrl.pathname;
-  useEffect(() => {
-    if (routePath === '/admin') window.location.replace('/admin.html');
-  }, [routePath]);
-  const selectedProduct = routePath.startsWith('/product/')
-    ? shop.products.find(product => product.id === decodeURIComponent(routePath.slice('/product/'.length)))
+  const storeName = String(storeSettings.siteName || '').trim() || 'Мой телефон';
+  const productMatch = useMatch('/product/:id');
+  const selectedProduct = productMatch
+    ? shop.products.find(product => product.id === productMatch.params.id)
     : null;
   useEffect(() => {
     const title = selectedProduct
-      ? `${selectedProduct.name} — Мой телефон`
-      : 'Мой телефон — смартфондор дүкөнү';
+      ? `${selectedProduct.name} — ${storeName}`
+      : routePath === '/contacts'
+        ? `${t('footer.contact')} — ${storeName}`
+      : `${storeName} — смартфондор дүкөнү`;
     document.title = title;
     const description = document.querySelector('meta[name="description"]');
-    if (description) description.content = selectedProduct?.desc || 'Мой телефон — заманбап смартфондор, ыңгайлуу тандоо жана сапаттуу тейлөө.';
-  }, [selectedProduct]);
+    if (description) description.content = selectedProduct?.desc || (routePath === '/contacts'
+      ? `${t('footer.contact')} — ${storeName}`
+      : `${storeName} — заманбап смартфондор, ыңгайлуу тандоо жана сапаттуу тейлөө.`);
+  }, [routePath, location.search, selectedProduct, storeName, t]);
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.lang = language;
@@ -147,41 +145,50 @@ export default function ShopApp() {
       onToggleTheme={() => setTheme(current => current === 'original' ? 'studio' : 'original')}
       user={user}
       onNavigate={navigate}
-      onLogout={() => auth && signOut(auth).catch(error => {
-        console.error('Unable to sign out:', error);
-        showToast(language === 'ru' ? 'Не удалось выйти из аккаунта.' : 'Аккаунттан чыгуу ишке ашкан жок.');
-      })}
+      onLogout={() => {
+        if (!auth || !window.confirm(t('auth.logoutConfirm'))) return;
+        signOut(auth).catch(error => {
+          console.error('Unable to sign out:', error);
+          showToast(language === 'ru' ? 'Не удалось выйти из аккаунта.' : 'Аккаунттан чыгуу ишке ашкан жок.');
+        });
+      }}
       favoriteCount={favoriteIds.length}
+      storeName={storeName}
     />
     <main>
-    {routePath === '/login' || routePath === '/register'
-      ? <AuthPage mode={routePath.slice(1)} onNavigate={navigate} />
-      : routePath === '/favorites'
-        ? <Favorites user={user?.isAnonymous ? null : user} products={shop.products} favoriteIds={favoriteIds} onFavorite={handleFavorite} onNavigate={navigate} error={favoriteError} loading={favoriteLoading} memory={shop.memory} setMemory={shop.setMemory} onAdd={shop.addToCart} />
-        : routePath === '/checkout'
-          ? <Checkout cart={shop.cart} user={user} onSuccess={completeOrder} onNavigate={navigate} />
-          : routePath === '/order-success'
-            ? <OrderSuccess orderId={routeUrl.searchParams.get('id') || ''} onNavigate={navigate} />
-            : routePath.startsWith('/product/')
-              ? <ProductDetails product={selectedProduct} user={user?.isAnonymous ? null : user} onNavigate={navigate} onFavorite={handleFavorite} isFavorite={selectedProduct ? favoriteIds.includes(selectedProduct.id) : false} onAdd={shop.addToCart} />
-              : <>
-                {favoriteError && <p className="inline-error" role="alert">{favoriteError}</p>}
-                <Hero products={shop.products} />
-                <Story />
-                <Catalog
-                  products={shop.products}
-                  brand={shop.brand}
-                  setBrand={shop.setBrand}
-                  memory={shop.memory}
-                  setMemory={shop.setMemory}
-                  onAdd={shop.addToCart}
-                  favoriteIds={favoriteIds}
-                  onFavorite={handleFavorite}
-                  onView={id => navigate(`/product/${encodeURIComponent(id)}`)}
-                />
-              </>}
+      <Routes>
+        <Route path="/" element={<>
+          {favoriteError && <p className="inline-error" role="alert">{favoriteError}</p>}
+          <Hero storeName={storeName} />
+          <Story />
+          <Catalog
+            products={shop.products}
+            brand={shop.brand}
+            setBrand={shop.setBrand}
+            memory={shop.memory}
+            setMemory={shop.setMemory}
+            onAdd={shop.addToCart}
+            favoriteIds={favoriteIds}
+            onFavorite={handleFavorite}
+            onView={id => navigate(`/product/${encodeURIComponent(id)}`)}
+          />
+        </>} />
+        <Route path="/contacts" element={<ContactPage settings={storeSettings} settingsError={storeSettingsError} storeName={storeName} />} />
+        <Route path="/product/:id" element={<ProductDetails product={selectedProduct} user={user?.isAnonymous ? null : user} onNavigate={navigate} onFavorite={handleFavorite} isFavorite={selectedProduct ? favoriteIds.includes(selectedProduct.id) : false} onAdd={shop.addToCart} whatsappNumber={storeSettings.orderWhatsappNumber || storeSettings.whatsappNumber || storeSettings.phone} />} />
+        <Route path="/login" element={<AuthPage mode="login" onNavigate={navigate} />} />
+        <Route path="/register" element={<AuthPage mode="register" onNavigate={navigate} />} />
+        <Route path="/orders" element={<OrderHistory user={user?.isAnonymous ? null : user} onNavigate={navigate} />} />
+        <Route path="/favorites" element={<Favorites user={user?.isAnonymous ? null : user} products={shop.products} favoriteIds={favoriteIds} onFavorite={handleFavorite} onNavigate={navigate} error={favoriteError} loading={favoriteLoading} memory={shop.memory} setMemory={shop.setMemory} onAdd={shop.addToCart} />} />
+        <Route path="/checkout" element={!user || user.isAnonymous
+          ? <AuthPage mode="login" onNavigate={navigate} nextPath="/checkout" />
+          : <Checkout cart={shop.cart} user={user} onSuccess={completeOrder} onNavigate={navigate} />} />
+        <Route path="/order-success" element={<OrderSuccess orderId={routeUrl.searchParams.get('id') || ''} onNavigate={navigate} />} />
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </main>
-    <Footer settings={storeSettings} settingsError={storeSettingsError} />
+    {routePath !== '/contacts' && <Footer settings={storeSettings} settingsError={storeSettingsError} storeName={storeName} />}
+    <ContactButtons settings={storeSettings} storeName={storeName} />
     <Cart cart={shop.cart} products={shop.products} setCart={shop.setCart} isOpen={shop.cartOpen} onClose={() => shop.setCartOpen(false)} onCheckout={checkout} onToast={showToast} />
     <Toast message={toast} />
   </>;

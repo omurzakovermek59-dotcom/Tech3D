@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { twoGisApiKey } from '../../firebase.js';
 import { useLanguage } from '../../i18n/language.jsx';
+import { formatPhoneNumber, isValidPhoneNumber, normalizePhoneNumber, whatsappUrl } from '../../utils/phone.js';
 
 function isValidCoordinate(value, minimum, maximum) {
   const coordinate = Number(value);
@@ -44,6 +45,11 @@ export default function StoreLocation({ settings = {}, settingsError = '' }) {
   const directionsUrl = hasCoordinates
     ? `https://2gis.kg/directions/points/${longitude},${latitude}`
     : '';
+  const phone = normalizePhoneNumber(settings.phone);
+  const whatsappNumber = isValidPhoneNumber(settings.whatsappNumber) ? settings.whatsappNumber : settings.phone;
+  const formattedPhone = formatPhoneNumber(settings.phone);
+  const formattedWhatsapp = formatPhoneNumber(whatsappNumber);
+  const whatsappLink = whatsappUrl(whatsappNumber);
 
   useEffect(() => {
     setMapError(false);
@@ -76,7 +82,8 @@ export default function StoreLocation({ settings = {}, settingsError = '' }) {
     <div className="store-location-details">
       <p><b>{settings.name || t('location.namePending')}</b></p>
       <p>{t('location.address')}: {settings.address || t('location.addressPending')}</p>
-      {settings.phone && <p>{t('footer.phone')}: <a href={`tel:${settings.phone}`}>{settings.phone}</a></p>}
+      {phone && <p>{t('footer.phone')}: <a href={`tel:${phone}`}>{formattedPhone}</a></p>}
+      {whatsappLink && <p>WhatsApp: <a href={whatsappLink} target="_blank" rel="noopener noreferrer">{formattedWhatsapp}</a></p>}
       <div className="location-links">
         {mapUrl && <a className="text-button" href={mapUrl} target="_blank" rel="noopener noreferrer">{t('location.openMap')}</a>}
         {directionsUrl && <a className="text-button" href={directionsUrl} target="_blank" rel="noopener noreferrer">{t('location.directions')}</a>}

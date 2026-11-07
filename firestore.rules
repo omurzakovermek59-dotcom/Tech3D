@@ -7,7 +7,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return signedIn()
-        && request.auth.token.email == 'admin@256.kg';
+        && request.auth.token.email in [
+          'admin@256.kg'
+        ];
     }
 
     match /products/{productId} {
@@ -34,6 +36,19 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.resource.data.keys().hasOnly(['productId', 'createdAt'])
         && request.resource.data.productId == productId;
+    }
+
+    match /users/{userId}/profile/{profileId} {
+      allow read, delete: if signedIn()
+        && request.auth.uid == userId
+        && profileId == 'contact';
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && profileId == 'contact'
+        && request.resource.data.keys().hasOnly(['phone'])
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 9
+        && request.resource.data.phone.size() <= 30;
     }
 
     match /orders/{orderId} {
@@ -67,6 +82,22 @@ service cloud.firestore {
     match /system/{documentId} {
       allow read: if documentId == 'storeSettings' || isAdmin();
       allow write: if isAdmin();
+    }
+
+    match /emailLoginChallenges/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /emailLoginRateLimits/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /emailLoginIpRateLimits/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /telegramOrderRateLimits/{documentId} {
+      allow read, write: if false;
     }
   }
 }
