@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { fmt } from '../../data.js';
 import { deleteReview, loadReviews, saveReview } from '../../services/store.js';
-import { sendQuickTelegramOrder } from '../../services/telegramOrders.js';
 import { memoryText, productText, useLanguage } from '../../i18n/language.jsx';
 import { whatsappUrl as getWhatsappUrl } from '../../utils/phone.js';
 import ProductGallery from './ProductGallery.jsx';
@@ -22,14 +21,7 @@ export default function ProductDetails({ product, user, onNavigate, onFavorite, 
   const [selectedImage, setSelectedImage] = useState('');
   const [showModel, setShowModel] = useState(false);
   const [colorError, setColorError] = useState('');
-  const [quickBuyOpen, setQuickBuyOpen] = useState(false);
-  const [quickBuyName, setQuickBuyName] = useState('');
-  const [quickBuyPhone, setQuickBuyPhone] = useState('');
-  const [quickBuyError, setQuickBuyError] = useState('');
-  const [quickBuySuccess, setQuickBuySuccess] = useState('');
-  const [quickBuyBusy, setQuickBuyBusy] = useState(false);
   const modelRef = useRef(null);
-  const quickOrderRef = useRef({ signature: '', requestId: `T3D-${crypto.randomUUID()}` });
   const modelUrl = product?.modelUrl || product?.model || '';
 
   useEffect(() => {
@@ -42,12 +34,6 @@ export default function ProductDetails({ product, user, onNavigate, onFavorite, 
     setSelectedImage(firstColor?.mainImage || firstColor?.images?.[0] || firstColor?.image || product.image || product.gallery?.[0] || '');
     setShowModel(false);
     setColorError('');
-    setQuickBuyOpen(false);
-    setQuickBuyName('');
-    setQuickBuyPhone('');
-    setQuickBuyError('');
-    setQuickBuySuccess('');
-    quickOrderRef.current = { signature: '', requestId: `T3D-${crypto.randomUUID()}` };
     setLoadingReviews(true);
     setReviews([]);
     setReviewError('');
@@ -62,14 +48,6 @@ export default function ProductDetails({ product, user, onNavigate, onFavorite, 
       .finally(() => { if (active) setLoadingReviews(false); });
     return () => { active = false; };
   }, [product?.id, ru]);
-  useEffect(() => {
-    if (!quickBuyOpen) return undefined;
-    const closeOnEscape = event => {
-      if (event.key === 'Escape') setQuickBuyOpen(false);
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [quickBuyOpen]);
   useEffect(() => {
     if (!modelUrl) return undefined;
     let active = true;
@@ -184,48 +162,6 @@ export default function ProductDetails({ product, user, onNavigate, onFavorite, 
     }
     onAdd(product, memoryIndex, selectedColor?.name || '');
   };
-  const openQuickBuy = () => {
-    if (colors.length && !selectedColor) {
-      setColorError(t('location.selectColor'));
-      return;
-    }
-    setQuickBuyError('');
-    setQuickBuySuccess('');
-    setQuickBuyOpen(open => !open);
-  };
-  const submitQuickBuy = async event => {
-    event.preventDefault();
-    setQuickBuyError('');
-    setQuickBuySuccess('');
-    setQuickBuyBusy(true);
-    try {
-      const details = {
-        productId: product.id,
-        memory: memory[0],
-        color: selectedColor?.name || '',
-        customerName: quickBuyName.trim(),
-        phone: quickBuyPhone.trim()
-      };
-      const signature = JSON.stringify(details);
-      if (quickOrderRef.current.signature !== signature) {
-        quickOrderRef.current = { signature, requestId: `T3D-${crypto.randomUUID()}` };
-      }
-      await sendQuickTelegramOrder({
-        ...details,
-        requestId: quickOrderRef.current.requestId
-      });
-      quickOrderRef.current = { signature: '', requestId: `T3D-${crypto.randomUUID()}` };
-      setQuickBuyName('');
-      setQuickBuyPhone('');
-      setQuickBuyOpen(false);
-      setQuickBuySuccess(t('product.quickOrderSuccess'));
-    } catch (error) {
-      console.error('Unable to send quick order:', error);
-      setQuickBuyError(t('product.quickOrderFailed'));
-    } finally {
-      setQuickBuyBusy(false);
-    }
-  };
   return <section className="section route-page">
     <button className="text-button" onClick={() => onNavigate('/')}>← {ru ? 'В каталог' : 'Каталогго'}</button>
     <article className="glass product-detail">
@@ -274,26 +210,11 @@ export default function ProductDetails({ product, user, onNavigate, onFavorite, 
         <div className="detail-actions">
           <button className="btn ghost" onClick={() => onFavorite(product.id)}>{isFavorite ? (ru ? '♥ В избранном' : '♥ Тандалгандарда') : (ru ? '♡ В избранное' : '♡ Тандалгандарга')}</button>
           <button className="btn" disabled={product.stock <= 0} onClick={addToCart}>{product.stock <= 0 ? t('product.soldOut') : t('product.add')}</button>
-          <button className="btn telegram-product-link" type="button" disabled={product.stock <= 0} onClick={openQuickBuy}>{t('product.quickOrderButton')}</button>
           {waLink && product.stock > 0 && <a className="btn whatsapp-product-link" href={`${waLink}?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.5 0 .2 5.3.2 11.9c0 2.1.6 4.1 1.6 5.8L0 24l6.5-1.7a12 12 0 0 0 5.6 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.1-1.3-6.1-3.6-8.3ZM12.1 21.7a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.8 1 1-3.7-.3-.4a9.8 9.8 0 1 1 8.5 4.7Zm5.4-7.3c-.3-.2-1.7-.9-2-.9s-.5-.2-.7.2-.8.9-1 1.1-.4.2-.7.1a8.1 8.1 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.2-.7l.5-.6.2-.5v-.5c0-.2-.7-1.6-.9-2.2-.3-.5-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1 2.8 1.1 3c.2.2 2 3.1 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.1-1.4-.1-.2-.3-.3-.6-.4Z"/></svg>
             {t('product.whatsappOrder')}
           </a>}
         </div>
-        {quickBuySuccess && <p className="quick-order-success" role="status">{quickBuySuccess}</p>}
-        {quickBuyOpen && <div className="quick-order-backdrop" onClick={event => {
-          if (event.target === event.currentTarget && !quickBuyBusy) setQuickBuyOpen(false);
-        }}>
-          <form className="glass quick-order-form quick-order-dialog" onSubmit={submitQuickBuy} role="dialog" aria-modal="true" aria-labelledby="quick-order-title">
-            <button className="quick-order-close" type="button" onClick={() => setQuickBuyOpen(false)} aria-label={t('product.quickOrderClose')}>×</button>
-            <h3 id="quick-order-title">{t('product.quickOrderTitle')}</h3>
-            <p>{productText(product, 'name', t)} · {selectedColor?.name || '—'} · {memoryText(memory[0], t)} · {fmt(price)}</p>
-            <label>{t('cart.name')}<input autoFocus value={quickBuyName} onChange={event => setQuickBuyName(event.target.value)} autoComplete="name" minLength="2" maxLength="100" required /></label>
-            <label>{t('cart.phone')}<input type="tel" value={quickBuyPhone} onChange={event => setQuickBuyPhone(event.target.value)} inputMode="tel" autoComplete="tel" minLength="9" maxLength="30" required /></label>
-            {quickBuyError && <p className="err" role="alert">{quickBuyError}</p>}
-            <button className="btn telegram-product-link" disabled={quickBuyBusy}>{quickBuyBusy ? t('product.quickOrderSending') : t('product.quickOrderButton')}</button>
-          </form>
-        </div>}
         <p className="rating-summary">★ {average ? average.toFixed(1) : '—'} <span>({reviews.length} {ru ? 'отзывов' : 'пикир'})</span></p>
       </div>
     </article>
